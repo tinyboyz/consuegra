@@ -1,40 +1,26 @@
+#ifndef CONSUEGRA_H
+#define CONSUEGRA_H
 
-// consuegra.h : consuegra 应用程序的主头文件
-//
-#pragma once
+#include <QtGui/QMainWindow>
+#include "ui_consuegra.h"
+#include <QtGui>
 
-#ifndef __AFXWIN_H__
-	#error "在包含此文件之前包含“stdafx.h”以生成 PCH 文件"
-#endif
-
-#include "resource.h"       // 主符号
-
-
-// CMainApp:
-// 有关此类的实现，请参阅 consuegra.cpp
-//
-
-class CMainApp : public CWinAppEx
+class consuegra : public QMainWindow
 {
+	Q_OBJECT
+
 public:
-	CMainApp();
+	consuegra(QWidget *parent = 0, Qt::WFlags flags = 0);
+	~consuegra();
 
+private slots:
+	void import();
 
-// 重写
-public:
-	virtual BOOL InitInstance();
-	virtual int ExitInstance();
-
-// 实现
-	UINT  m_nAppLook;
-	BOOL  m_bHiColorIcons;
-
-	virtual void PreLoadState();
-	virtual void LoadCustomState();
-	virtual void SaveCustomState();
-
-	afx_msg void OnAppAbout();
-	DECLARE_MESSAGE_MAP()
+private:
+	void connects();
+	QStringList findFilesRecursively (QProgressDialog &progressDialog, QStringList &paths, QString fileTypes );
+	void find(const QString &path);
+	Ui::mainWindow ui;
 };
 
-extern CMainApp theApp;
+#endif // CONSUEGRA_H

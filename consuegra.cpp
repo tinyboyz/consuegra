@@ -1,216 +1,98 @@
-
-// consuegra.cpp : 定义应用程序的类行为。
-//
-
-#include "stdafx.h"
-#include "afxwinappex.h"
-#include "afxdialogex.h"
 #include "consuegra.h"
-#include "MainFrm.h"
-
-#include "MainDoc.h"
-#include "MainView.h"
-
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
-
-// CMainApp
-
-BEGIN_MESSAGE_MAP(CMainApp, CWinAppEx)
-	ON_COMMAND(ID_APP_ABOUT, &CMainApp::OnAppAbout)
-	// 基于文件的标准文档命令
-	ON_COMMAND(ID_FILE_NEW, &CWinAppEx::OnFileNew)
-	ON_COMMAND(ID_FILE_OPEN, &CWinAppEx::OnFileOpen)
-	// 标准打印设置命令
-	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
-END_MESSAGE_MAP()
-
-
-// CMainApp 构造
-
-CMainApp::CMainApp()
+consuegra::consuegra(QWidget *parent, Qt::WFlags flags)
+	: QMainWindow(parent, flags)
 {
-	m_bHiColorIcons = TRUE;
-
-	// 支持重新启动管理器
-	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_ALL_ASPECTS;
-#ifdef _MANAGED
-	// 如果应用程序是利用公共语言运行时支持(/clr)构建的，则:
-	//     1) 必须有此附加设置，“重新启动管理器”支持才能正常工作。
-	//     2) 在您的项目中，您必须按照生成顺序向 System.Windows.Forms 添加引用。
-	System::Windows::Forms::Application::SetUnhandledExceptionMode(System::Windows::Forms::UnhandledExceptionMode::ThrowException);
-#endif
-
-	// TODO: 将以下应用程序 ID 字符串替换为唯一的 ID 字符串；建议的字符串格式
-	//为 CompanyName.ProductName.SubProduct.VersionInformation
-	SetAppID(_T("consuegra.AppID.NoVersion"));
-
-	// TODO: 在此处添加构造代码，
-	// 将所有重要的初始化放置在 InitInstance 中
+	ui.setupUi(this);
+	connects();
 }
 
-// 唯一的一个 CMainApp 对象
-
-CMainApp theApp;
-
-
-// CMainApp 初始化
-
-BOOL CMainApp::InitInstance()
+consuegra::~consuegra()
 {
-	// 如果一个运行在 Windows XP 上的应用程序清单指定要
-	// 使用 ComCtl32.dll 版本 6 或更高版本来启用可视化方式，
-	//则需要 InitCommonControlsEx()。否则，将无法创建窗口。
-	INITCOMMONCONTROLSEX InitCtrls;
-	InitCtrls.dwSize = sizeof(InitCtrls);
-	// 将它设置为包括所有要在应用程序中使用的
-	// 公共控件类。
-	InitCtrls.dwICC = ICC_WIN95_CLASSES;
-	InitCommonControlsEx(&InitCtrls);
 
-	CWinAppEx::InitInstance();
+}
 
+void consuegra::connects()
+{
+	connect(ui.import_cv, SIGNAL(triggered()), this, SLOT(import()));
+}
 
-	// 初始化 OLE 库
-	if (!AfxOleInit())
+void consuegra::import()
+{
+	QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+		QDir::currentPath(),
+		QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+	if (dir.isEmpty())
 	{
-		AfxMessageBox(IDP_OLE_INIT_FAILED);
-		return FALSE;
+		QMessageBox q;
+		q.setText("null");
+		q.show();
 	}
+	qDebug("%s", dir);
 
-	AfxEnableControlContainer();
+	find(dir);
 
-	EnableTaskbarInteraction(FALSE);
+	QStandardItemModel *model = new QStandardItemModel(2,3,this); //2 Rows and 3 Columns
+	model->setHorizontalHeaderItem(0, new QStandardItem(QString("Column1 Header")));
+	model->setHorizontalHeaderItem(1, new QStandardItem(QString("Column2 Header")));
+	model->setHorizontalHeaderItem(2, new QStandardItem(QString("Column3 Header")));
 
-	// 使用 RichEdit 控件需要  AfxInitRichEdit2()	
-	// AfxInitRichEdit2();
-
-	// 标准初始化
-	// 如果未使用这些功能并希望减小
-	// 最终可执行文件的大小，则应移除下列
-	// 不需要的特定初始化例程
-	// 更改用于存储设置的注册表项
-	// TODO: 应适当修改该字符串，
-	// 例如修改为公司或组织名
-	SetRegistryKey(_T("应用程序向导生成的本地应用程序"));
-	LoadStdProfileSettings(4);  // 加载标准 INI 文件选项(包括 MRU)
-
-
-	InitContextMenuManager();
-
-	InitKeyboardManager();
-
-	InitTooltipManager();
-	CMFCToolTipInfo ttParams;
-	ttParams.m_bVislManagerTheme = TRUE;
-	theApp.GetTooltipManager()->SetTooltipParams(AFX_TOOLTIP_TYPE_ALL,
-		RUNTIME_CLASS(CMFCToolTipCtrl), &ttParams);
-
-	// 注册应用程序的文档模板。文档模板
-	// 将用作文档、框架窗口和视图之间的连接
-	CSingleDocTemplate* pDocTemplate;
-	pDocTemplate = new CSingleDocTemplate(
-		IDR_MAINFRAME,
-		RUNTIME_CLASS(CMainDoc),
-		RUNTIME_CLASS(CMainFrame),       // 主 SDI 框架窗口
-		RUNTIME_CLASS(CMainView));
-	if (!pDocTemplate)
-		return FALSE;
-	AddDocTemplate(pDocTemplate);
-
-
-	// 分析标准 shell 命令、DDE、打开文件操作的命令行
-	CCommandLineInfo cmdInfo;
-	ParseCommandLine(cmdInfo);
-
-
-
-	// 调度在命令行中指定的命令。如果
-	// 用 /RegServer、/Register、/Unregserver 或 /Unregister 启动应用程序，则返回 FALSE。
-	if (!ProcessShellCommand(cmdInfo))
-		return FALSE;
-
-	// 唯一的一个窗口已初始化，因此显示它并对其进行更新
-	m_pMainWnd->ShowWindow(SW_SHOW);
-	m_pMainWnd->UpdateWindow();
-	// 仅当具有后缀时才调用 DragAcceptFiles
-	//  在 SDI 应用程序中，这应在 ProcessShellCommand 之后发生
-	return TRUE;
+	ui.tableView->setModel(model);
 }
 
-int CMainApp::ExitInstance()
-{
-	//TODO: 处理可能已添加的附加资源
-	AfxOleTerm(FALSE);
-
-	return CWinAppEx::ExitInstance();
+QStringList consuegra::findFilesRecursively (QProgressDialog &progressDialog, QStringList &paths, QString fileTypes ) {
+	if ( fileTypes.isEmpty() ) fileTypes = "*";
+	QStringList result, more;
+	QStringList::Iterator it;
+	for ( uint i = 0 ; i < paths.size() ; i++ ) { // inefficient...whatever
+		QDir dir( paths[i] );
+		more = dir.entryList( QStringList(fileTypes), QDir::Files );
+		qDebug("Matching file number %d in %s ...", more.size(), paths[i]);
+		progressDialog.setLabelText(tr("Matching file number %1 ...").arg(more.size()));
+		// reg exp in next line excludes . and .. dirs (and .* actually)
+		more = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+		more = findFilesRecursively(progressDialog, more, fileTypes );
+	}
+	return result; // yields absolute paths
 }
 
-// CMainApp 消息处理程序
-
-
-// 用于应用程序“关于”菜单项的 CAboutDlg 对话框
-
-class CAboutDlg : public CDialogEx
+void consuegra::find(const QString &path)
 {
-public:
-	CAboutDlg();
+	QDir currentDir = QDir(path);
+	QStringList files;
+	files = currentDir.entryList(QStringList("*"),
+		QDir::Files | QDir::NoSymLinks);
+	QString text = "*.doc";
 
-// 对话框数据
-	enum { IDD = IDD_ABOUTBOX };
+	
 
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
+	QProgressDialog progressDialog(this);
+	progressDialog.setCancelButtonText(tr("&Cancel"));
+	progressDialog.setRange(0, files.size());
+	progressDialog.setWindowTitle(tr("Find Files"));
+	progressDialog.show();
 
-// 实现
-protected:
-	DECLARE_MESSAGE_MAP()
-};
 
-CAboutDlg::CAboutDlg() : CDialogEx(CAboutDlg::IDD)
-{
+	qDebug("%s", path);
+	QStringList foundFiles = findFilesRecursively(progressDialog, QStringList(path), text);
+
+	//for (int i = 0; i < files.size(); ++i) {
+	//	progressDialog.setLabelText(tr("Searching file number %1 of %2...").arg(i).arg(files.size()));
+	//	qApp->processEvents();
+	//	QFile file(currentDir.absoluteFilePath(files[i]));
+
+	//	if (file.open(QIODevice::ReadOnly)) {
+	//		QString line;
+	//		QTextStream in(&file);
+	//		while (!in.atEnd()) {
+	//			if (progressDialog.wasCanceled())
+	//				break;
+	//			line = in.readLine();
+	//			if (line.contains(text)) {
+	//				foundFiles << files[i];
+	//				break;
+	//			}
+	//		}
+	//	}
+	//}
 }
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialogEx::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
-END_MESSAGE_MAP()
-
-// 用于运行对话框的应用程序命令
-void CMainApp::OnAppAbout()
-{
-	CAboutDlg aboutDlg;
-	aboutDlg.DoModal();
-}
-
-// CMainApp 自定义加载/保存方法
-
-void CMainApp::PreLoadState()
-{
-	BOOL bNameValid;
-	CString strName;
-	bNameValid = strName.LoadString(IDS_EDIT_MENU);
-	ASSERT(bNameValid);
-	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EDIT);
-	bNameValid = strName.LoadString(IDS_EXPLORER);
-	ASSERT(bNameValid);
-	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EXPLORER);
-}
-
-void CMainApp::LoadCustomState()
-{
-}
-
-void CMainApp::SaveCustomState()
-{
-}
-
-// CMainApp 消息处理程序
-
-
-
